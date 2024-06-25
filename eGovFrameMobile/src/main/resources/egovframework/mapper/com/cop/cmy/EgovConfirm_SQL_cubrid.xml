@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ConfirmManageDAO">
+
+	<resultMap id="confirmList" type="egovframework.com.cop.cmy.service.ConfirmHistoryVO">
+		<result property="confmNumber" column="CONFM_NO"/>
+		<result property="confmRqesterId" column="CONFM_RQESTER_ID"/>
+		<result property="confmRqesterNm" column="CONFM_RQESTER_NM"/>
+		<result property="confmTyCode" column="CONFM_TY_CODE"/>
+		<result property="confmTyCodeNm" column="CONFM_TY_CODE_NM"/>
+		<result property="confmSttusCode" column="CONFM_STTUS_CODE"/>
+		<result property="confmSttusCodeNm" column="CONFM_STTUS_CODE_NM"/>		
+		<result property="opertTyCode" column="OPERT_TY_CODE"/>
+		<result property="opertTyCodeNm" column="OPERT_TY_CODE_NM"/>				
+		<result property="trgetJobTyCode" column="TRGET_JOB_TY_CODE"/>
+		<result property="trgetJobId" column="TRGET_JOB_ID"/>
+		<result property="confmDe" column="CONFM_DE"/>
+		<result property="trgetJobTyNm" column="TRGET_JOB_TY_NM"/>
+		<result property="opertId" column="OPERT_ID"/>
+	</resultMap>
+
+	<insert id="insertConfirmRequest" parameterType="egovframework.com.cop.cmy.service.ConfirmHistory" >
+		<selectKey resultType="java.lang.Integer" keyProperty="confmNumber">
+				SELECT  NVL(MAX(CONFM_NO),0)+1 AS CONFM_NO  FROM COMTHCONFMHISTORY
+	    </selectKey>
+		<![CDATA[
+			INSERT INTO COMTHCONFMHISTORY 
+			(CONFM_NO, CONFM_RQESTER_ID, CONFMER_ID, CONFM_TY_CODE, 
+			 CONFM_STTUS_CODE, OPERT_TY_CODE, OPERT_ID, TRGET_JOB_TY_CODE, TRGET_JOB_ID )
+			VALUES
+			( #{confmNumber}, #{confmRqesterId}, #{confmerId}, #{confmTyCode}, 
+			  #{confmSttusCode}, #{opertTyCode}, #{opertId}, #{trgetJobTyCode}, #{trgetJobId} )
+		]]>
+	</insert>
+	
+	<select id="selectConfirmRequestList" parameterType="egovframework.com.cop.cmy.service.ConfirmHistoryVO" resultMap="confirmList" >
+		<![CDATA[
+		SELECT * FROM ( SELECT rownum rn, TB.* FROM (
+			SELECT 
+				a.CONFM_NO, a.CONFM_RQESTER_ID, b.USER_NM AS CONFM_RQESTER_NM, 
+				a.CONFM_DE, a.CONFM_TY_CODE, d.CODE_NM AS CONFM_TY_CODE_NM, 
+			    a.CONFM_STTUS_CODE, e.CODE_NM AS CONFM_STTUS_CODE_NM, 
+				a.OPERT_TY_CODE, g.CODE_NM as OPERT_TY_CODE_NM,
+				a.TRGET_JOB_TY_CODE, f.CODE_NM as TRGET_JOB_TY_NM, a.TRGET_JOB_ID, a.OPERT_ID
+			FROM COMTHCONFMHISTORY a
+			LEFT OUTER JOIN COMVNUSERMASTER b
+			ON a.CONFM_RQESTER_ID = b.ESNTL_ID
+			LEFT OUTER JOIN 
+				( SELECT CODE_ID, CODE, CODE_NM FROM 	
+				 COMTCCMMNDETAILCODE WHERE CODE_ID = 'COM006' AND USE_AT='Y') d
+			ON a.CONFM_TY_CODE = d.CODE
+			LEFT OUTER JOIN 
+				( SELECT CODE_ID, CODE, CODE_NM FROM 	
+				 COMTCCMMNDETAILCODE WHERE CODE_ID = 'COM007' AND USE_AT='Y') e
+			ON a.CONFM_STTUS_CODE = e.CODE
+			LEFT OUTER JOIN 
+				( SELECT CODE_ID, CODE, CODE_NM FROM 	
+				 COMTCCMMNDETAILCODE WHERE CODE_ID = 'COM003' AND USE_AT='Y') f
+			ON a.TRGET_JOB_TY_CODE = f.CODE
+			LEFT OUTER JOIN 
+				( SELECT CODE_ID, CODE, CODE_NM FROM 	
+				 COMTCCMMNDETAILCODE WHERE CODE_ID = 'COM032' AND USE_AT='Y') g
+			ON a.OPERT_TY_CODE = g.CODE			
+			WHERE a.CONFMER_ID = #{confmerId}
+		]]>
+			<if test="trgetId != ''">
+				<![CDATA[	a.TRGET_JOB_ID = #{trgetId} 		]]>
+			</if>	
+			<if test="searchCnd == '0'">AND
+				<![CDATA[	d.CODE_NM LIKE CONCAT('%' , #{searchWrd} , '%') 		]]>
+			</if>	
+			<if test="searchCnd == '1'">AND
+				<![CDATA[	e.CODE_NM LIKE CONCAT('%' , #{searchWrd} , '%') 		]]>
+			</if>				
+		<![CDATA[
+			ORDER BY a.CONFM_NO DESC
+			) TB ) WHERE rn BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+		]]>				
+	</select>	
+	
+	<select id="selectConfirmRequestListCnt" parameterType="egovframework.com.cop.cmy.service.ConfirmHistoryVO" resultType="java.lang.Integer" >
+		<![CDATA[
+			SELECT 
+				COUNT(a.CONFM_NO) as cnt
+			FROM COMTHCONFMHISTORY a
+			LEFT OUTER JOIN COMVNUSERMASTER b
+			ON a.CONFM_RQESTER_ID = b.ESNTL_ID
+			LEFT OUTER JOIN 
+				( SELECT CODE_ID, CODE, CODE_NM FROM 	
+				 COMTCCMMNDETAILCODE WHERE CODE_ID = 'COM006' AND USE_AT='Y') d
+			ON a.CONFM_TY_CODE = d.CODE
+			LEFT OUTER JOIN 
+				( SELECT CODE_ID, CODE, CODE_NM FROM 	
+				 COMTCCMMNDETAILCODE WHERE CODE_ID = 'COM007' AND USE_AT='Y') e
+			ON a.CONFM_STTUS_CODE = e.CODE
+			LEFT OUTER JOIN 
+				( SELECT CODE_ID, CODE, CODE_NM FROM 	
+				 COMTCCMMNDETAILCODE WHERE CODE_ID = 'COM003' AND USE_AT='Y') f
+			ON a.TRGET_JOB_TY_CODE = f.CODE
+			LEFT OUTER JOIN 
+				( SELECT CODE_ID, CODE, CODE_NM FROM 	
+				 COMTCCMMNDETAILCODE WHERE CODE_ID = 'COM032' AND USE_AT='Y') g
+			ON a.OPERT_TY_CODE = g.CODE			
+			WHERE a.CONFMER_ID = #{confmerId}
+		]]>
+			<if test="trgetId != ''">
+				<![CDATA[	a.TRGET_JOB_ID = #{trgetId} 		]]>
+			</if>	
+			<if test="searchCnd == '0'">AND
+				<![CDATA[	d.CODE_NM LIKE CONCAT('%' , #{searchWrd} , '%') 		]]>
+			</if>	
+			<if test="searchCnd == '1'">AND
+				<![CDATA[	e.CODE_NM LIKE CONCAT('%' , #{searchWrd} , '%') 		]]>
+			</if>			
+	</select>	
+ 
+ 	<update id="updateConfirmRequest" parameterType="egovframework.com.cop.cmy.service.ConfirmHistory">
+ 		<![CDATA[
+			UPDATE COMTHCONFMHISTORY SET 
+				CONFM_DE = #{confmDe},
+				CONFM_STTUS_CODE = #{confmSttusCode}
+			WHERE CONFM_NO = #{confmNumber}
+ 		]]>
+ 	</update>
+
+	<select id="selectSingleConfirmRequest" parameterType="egovframework.com.cop.cmy.service.ConfirmHistoryVO" resultMap="confirmList" >
+		<![CDATA[
+			SELECT 
+				a.CONFM_NO, a.CONFM_RQESTER_ID, b.USER_NM AS CONFM_RQESTER_NM, 
+				a.CONFM_DE, a.CONFM_TY_CODE, d.CODE_NM AS CONFM_TY_CODE_NM, 
+			    a.CONFM_STTUS_CODE, e.CODE_NM AS CONFM_STTUS_CODE_NM, 
+				a.OPERT_TY_CODE, g.CODE_NM as OPERT_TY_CODE_NM,
+				a.TRGET_JOB_TY_CODE, f.CODE_NM as TRGET_JOB_TY_NM, a.TRGET_JOB_ID, a.OPERT_ID
+			FROM COMTHCONFMHISTORY a
+			LEFT OUTER JOIN COMVNUSERMASTER b
+			ON a.CONFM_RQESTER_ID = b.ESNTL_ID
+			LEFT OUTER JOIN 
+				( SELECT CODE_ID, CODE, CODE_NM FROM 	
+				 COMTCCMMNDETAILCODE WHERE CODE_ID = 'COM006' AND USE_AT='Y') d
+			ON a.CONFM_TY_CODE = d.CODE
+			LEFT OUTER JOIN 
+				( SELECT CODE_ID, CODE, CODE_NM FROM 	
+				 COMTCCMMNDETAILCODE WHERE CODE_ID = 'COM006' AND USE_AT='Y') e
+			ON a.CONFM_STTUS_CODE = e.CODE
+			LEFT OUTER JOIN 
+				( SELECT CODE_ID, CODE, CODE_NM FROM 	
+				 COMTCCMMNDETAILCODE WHERE CODE_ID = 'COM006' AND USE_AT='Y') f
+			ON a.TRGET_JOB_TY_CODE = f.CODE
+			LEFT OUTER JOIN 
+				( SELECT CODE_ID, CODE, CODE_NM FROM 	
+				 COMTCCMMNDETAILCODE WHERE CODE_ID = 'COM032' AND USE_AT='Y') g
+			ON a.OPERT_TY_CODE = g.CODE
+			WHERE a.CONFMER_ID = #{confmerId}
+			AND a.CONFM_NO = #{confmNumber}
+		]]>
+	</select>
+	
+		<select id="countConfirmRequest" parameterType="egovframework.com.cop.cmy.service.ConfirmHistory" resultType="java.lang.Integer" >
+		<![CDATA[
+			SELECT 
+				COUNT(a.CONFM_NO) as cnt
+			FROM COMTHCONFMHISTORY a	
+			WHERE a.CONFM_RQESTER_ID = #{confmRqesterId}
+			  AND a.CONFM_TY_CODE = #{confmTyCode}
+			  AND a.CONFM_STTUS_CODE = #{confmSttusCode}
+			  AND a.OPERT_TY_CODE = #{opertTyCode}
+			  AND a.TRGET_JOB_TY_CODE = #{trgetJobTyCode}
+			  AND a.TRGET_JOB_ID = #{trgetJobId}
+		]]>		
+	</select>	
+
+</mapper>

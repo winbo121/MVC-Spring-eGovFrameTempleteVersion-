@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MmsDAO">
+
+	<resultMap id="mmsTransInfoList" type="egovframework.mbl.com.mms.service.MmsTransInfoVO">
+		<result property="sn" column="SN"/>
+		<result property="trnsmisNo" column="TRNSMIS_NO"/>
+		<result property="recptnNo" column="RECPTN_NO"/>
+		<result property="trnsmisResultNm" column="TRNSMIS_RESULT_NM"/>
+		<result property="rqesterResultNm" column="RQESTER_RESULT_NM"/>
+		<result property="trnsmisDt" column="TRNSMIS_DT"/>
+		<result property="trnsmisConfirmDt" column="TRNSMIS_CONFIRM_DT"/>
+		<result property="mssageId" column="MSSAGE_ID"/>
+	</resultMap>
+
+	<resultMap id="attachFileList" type="egovframework.mbl.com.mms.service.AttachFileVO">
+		<result property="sn" column="SN"/>
+		<result property="atchFileId" column="ATCH_FILE_ID"/>
+		<result property="atchFileNm" column="ORIGNL_FILE_NM"/>
+		<result property="mmsAtchFileSj" column="MMS_ATCH_FILE_SJ"/>
+		<result property="updtDt" column="UPDT_DT"/>
+	</resultMap>
+
+	<resultMap id="attachFileDetail" type="egovframework.mbl.com.mms.service.AttachFileVO">
+		<result property="sn" column="SN"/>
+		<result property="mberId" column="MBER_ID"/>
+		<result property="atchFileId" column="ATCH_FILE_ID"/>
+		<result property="atchFileNm" column="ORIGNL_FILE_NM"/>
+		<result property="atchFileType" column="FILE_EXTSN"/>
+		<result property="atchFilePath" column="FILE_STRE_COURS"/>
+		<result property="streFileNm" column="STRE_FILE_NM"/>
+		<result property="mmsAtchFileSj" column="MMS_ATCH_FILE_SJ"/>
+		<result property="creatDt" column="CREAT_DT"/>
+		<result property="updtDt" column="UPDT_DT"/>
+	</resultMap>
+		
+	<insert id="insertMmsTransmissionResult" parameterType="egovframework.mbl.com.mms.service.MmsTransInfo" >
+		<![CDATA[
+			INSERT INTO COMTNMMS
+				(SN, MBER_ID, TRNSMIS_NO, 
+				RECPTN_NO, MSSAGE_SJ, MSSAGE_CN,
+				TRNSMIS_DT, RQESTER_RESULT_CODE_ID, RQESTER_RESULT_CODE, MSSAGE_ID)
+			VALUES
+				(#{sn}, #{mberId}, #{trnsmisNo},
+				#{recptnNo}, #{mssageSj}, #{mssageCn},
+				SYSDATETIME,
+				(SELECT CODE_ID
+					FROM COMTCCMMNDETAILCODE
+					WHERE CODE_NM = #{rqesterResultNm}),
+				(SELECT CODE
+					FROM COMTCCMMNDETAILCODE
+					WHERE CODE_NM = #{rqesterResultNm}),
+				#{mssageId})
+		]]>
+	</insert>
+	
+	<update id="updateMmsTransmissionResult">
+		<![CDATA[
+			UPDATE
+				COMTNMMS
+			SET
+				TRNSMIS_RESULT_CODE_ID = (SELECT CODE_ID
+											FROM COMTCCMMNDETAILCODE
+											WHERE CODE_NM = #{trnsmisResultNm}),
+				TRNSMIS_RESULT_CODE = (SELECT CODE
+											FROM COMTCCMMNDETAILCODE
+											WHERE CODE_NM = #{trnsmisResultNm}),
+				TRNSMIS_CONFIRM_DT = SYSDATETIME
+ 			WHERE
+ 				MSSAGE_ID = #{mssageId}
+		]]>
+	</update>	
+	
+	<select id="selectMmsTransmissionResultList" parameterType="egovframework.mbl.com.mms.service.MmsTransInfoVO" resultMap="mmsTransInfoList" >
+		<![CDATA[
+			SELECT  * FROM  ( SELECT ROWNUM RNUM, ALL_LIST.* FROM  (
+			SELECT
+				a.SN, a.TRNSMIS_NO, a.RECPTN_NO,
+				b.CODE_NM AS TRNSMIS_RESULT_NM, c.CODE_NM AS RQESTER_RESULT_NM,
+				a.TRNSMIS_DT, a.TRNSMIS_CONFIRM_DT, a.MSSAGE_ID
+			FROM
+				COMTNMMS a
+			LEFT OUTER JOIN
+				COMTCCMMNDETAILCODE b
+				ON (a.TRNSMIS_RESULT_CODE_ID = b.CODE_ID
+				AND a.TRNSMIS_RESULT_CODE = b.CODE)
+			LEFT OUTER JOIN
+				COMTCCMMNDETAILCODE c
+				ON (a.RQESTER_RESULT_CODE_ID = c.CODE_ID
+				AND a.RQESTER_RESULT_CODE = c.CODE)
+			WHERE
+				1 = 1
+		]]>
+			<if test="searchKeyword != null and searchKeyword != ''">
+				<if test="searchCondition == '0'">AND
+					<![CDATA[	a.TRNSMIS_NO LIKE CONCAT('%', #{searchKeyword}, '%')	]]>
+				</if>
+				<if test="searchCondition == '1'">AND
+					<![CDATA[	a.RECPTN_NO LIKE CONCAT('%', #{searchKeyword}, '%')	]]>
+				</if>
+				<if test="searchCondition == '2'">AND
+					<![CDATA[	b.CODE_NM LIKE CONCAT('%', #{searchKeyword}, '%')	]]>
+				</if>
+				<if test="searchCondition == '3'">AND
+					<![CDATA[	c.CODE_NM LIKE CONCAT('%', #{searchKeyword}, '%')	]]>
+				</if>
+			</if>
+		<![CDATA[
+			ORDER BY a.SN DESC
+					) ALL_LIST
+                   	)
+            WHERE  RNUM  > #{firstIndex} AND  RNUM <= #{firstIndex} + #{recordCountPerPage}
+		]]>
+	</select>	
+	
+	<select id="selectMmsTransmissionResultListCnt" parameterType="egovframework.mbl.com.mms.service.MmsTransInfoVO" resultType="java.lang.Integer" >
+		<![CDATA[
+			SELECT
+				COUNT(SN)
+			FROM
+				COMTNMMS a
+			LEFT OUTER JOIN
+				COMTCCMMNDETAILCODE b
+				ON (a.TRNSMIS_RESULT_CODE_ID = b.CODE_ID
+				AND a.TRNSMIS_RESULT_CODE = b.CODE)
+			LEFT OUTER JOIN
+				COMTCCMMNDETAILCODE c
+				ON (a.RQESTER_RESULT_CODE_ID = c.CODE_ID
+				AND a.RQESTER_RESULT_CODE = c.CODE)
+			WHERE
+				1 = 1
+		]]>
+			<if test="searchKeyword != null and searchKeyword != ''">
+				<if test="searchCondition == '0'">AND
+					<![CDATA[	a.TRNSMIS_NO LIKE CONCAT('%', #{searchKeyword}, '%')	]]>
+				</if>
+				<if test="searchCondition == '1'">AND
+					<![CDATA[	a.RECPTN_NO LIKE CONCAT('%', #{searchKeyword}, '%')	]]>
+				</if>
+				<if test="searchCondition == '2'">AND
+					<![CDATA[	b.CODE_NM LIKE CONCAT('%', #{searchKeyword}, '%')	]]>
+				</if>
+				<if test="searchCondition == '3'">AND
+					<![CDATA[	c.CODE_NM LIKE CONCAT('%', #{searchKeyword}, '%')	]]>
+				</if>
+			</if>
+	</select>
+	
+	<select id="selectAttachFileList" parameterType="egovframework.mbl.com.mms.service.AttachFileVO" resultMap="attachFileList" >
+		<![CDATA[
+			SELECT  * FROM  ( SELECT ROWNUM RNUM, ALL_LIST.* FROM  (
+			SELECT
+				SN, COMTNFILEDETAIL.ATCH_FILE_ID, ORIGNL_FILE_NM, MMS_ATCH_FILE_SJ, UPDT_DT
+			FROM
+				COMTNMMSATTACH 
+			INNER JOIN
+				COMTNFILEDETAIL
+			ON
+				COMTNMMSATTACH.ATCH_FILE_ID = COMTNFILEDETAIL.ATCH_FILE_ID
+			WHERE
+				1 = 1
+		]]>
+			<if test="searchCondition == '0'">AND
+				<![CDATA[	MMS_ATCH_FILE_SJ LIKE CONCAT('%', #{searchKeyword}, '%') 	]]>
+			</if>
+			<if test="searchCondition == '1'">AND
+				<![CDATA[	ORIGNL_FILE_NM LIKE CONCAT('%', #{searchKeyword}, '%') 	]]>
+			</if>
+		<![CDATA[
+			ORDER BY SN DESC
+					) ALL_LIST
+                   	)
+            WHERE  RNUM  > #{firstIndex} AND  RNUM <= #{firstIndex} + #{recordCountPerPage}
+		]]>
+	</select>	
+	
+	<select id="selectAttachFileListCnt" parameterType="egovframework.mbl.com.mms.service.AttachFileVO" resultType="java.lang.Integer" >
+		<![CDATA[
+			SELECT
+				COUNT(SN)
+			FROM
+				COMTNMMSATTACH 
+			INNER JOIN
+				COMTNFILEDETAIL
+			ON
+				COMTNMMSATTACH.ATCH_FILE_ID = COMTNFILEDETAIL.ATCH_FILE_ID
+			WHERE
+				1 = 1
+		]]>
+			<if test="searchCondition == '0'">AND
+				<![CDATA[	MMS_ATCH_FILE_SJ LIKE CONCAT('%', #{searchKeyword}, '%') 	]]>
+			</if>
+			<if test="searchCondition == '1'">AND
+				<![CDATA[	ORIGNL_FILE_NM LIKE CONCAT('%', #{searchKeyword}, '%') 	]]>
+			</if>
+	</select>
+	
+	<select id="selectAttachFile" parameterType="egovframework.mbl.com.mms.service.AttachFileVO" resultMap="attachFileDetail" >
+		<![CDATA[
+			SELECT
+				SN, MBER_ID, COMTNFILEDETAIL.ATCH_FILE_ID,
+				ORIGNL_FILE_NM, FILE_STRE_COURS, FILE_EXTSN,
+				STRE_FILE_NM, MMS_ATCH_FILE_SJ, CREAT_DT, UPDT_DT
+			FROM
+				COMTNMMSATTACH 
+			INNER JOIN
+				COMTNFILEDETAIL
+			ON
+				COMTNMMSATTACH.ATCH_FILE_ID = COMTNFILEDETAIL.ATCH_FILE_ID 
+			WHERE
+				SN = #{sn}
+		]]>	
+	</select>
+ 
+ 	<insert id="insertAttachFile" parameterType="egovframework.mbl.com.mms.service.AttachFile" >
+		<![CDATA[
+			INSERT INTO COMTNMMSATTACH
+				(SN, MBER_ID, ATCH_FILE_ID, MMS_ATCH_FILE_SJ, CREAT_DT, UPDT_DT)
+			VALUES
+				(#{sn}, #{mberId}, #{atchFileId}, #{mmsAtchFileSj}, SYSDATETIME, SYSDATETIME)			
+		]]>
+	</insert>
+	
+	<update id="updateAttachFile">
+		<![CDATA[
+			UPDATE
+				COMTNMMSATTACH
+			SET
+				MBER_ID = #{mberId},
+				ATCH_FILE_ID = #{atchFileId},
+				MMS_ATCH_FILE_SJ = #{mmsAtchFileSj},
+				UPDT_DT = SYSDATETIME
+ 			WHERE
+ 				SN = #{sn}
+		]]>
+		<if test="mberId != ''">
+			  	AND MBER_ID = #{mberId}
+		</if>
+	</update>
+	
+	<delete id="deleteAttachFile">
+		<![CDATA[
+			DELETE FROM
+				COMTNMMSATTACH 
+			WHERE
+				SN = #{sn}
+		]]>
+		<if test="mberId != ''">
+			  	AND MBER_ID = #{mberId}
+		</if>
+	</delete>
+ 
+</mapper>

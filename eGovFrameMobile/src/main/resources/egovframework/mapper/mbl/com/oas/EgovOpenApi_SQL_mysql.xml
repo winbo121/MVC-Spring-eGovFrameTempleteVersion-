@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="OpenApiDAO">
+
+	<resultMap id="openApiList" type="egovframework.mbl.com.oas.service.OpenApiVO">
+		<result property="sn" column="SN"/>
+		<result property="openApiSvcNm" column="OPEN_API_SVC_NM"/>
+		<result property="openApiProvdInsttNm" column="OPEN_API_PROVD_INSTT_NM"/>
+		<result property="collectDt" column="COLLECT_DT"/>
+	</resultMap>
+
+	<resultMap id="openApiDetail" type="egovframework.mbl.com.oas.service.OpenApiVO">
+		<result property="sn" column="SN"/>
+		<result property="mberId" column="MBER_ID"/>
+		<result property="openApiSvcNm" column="OPEN_API_SVC_NM"/>
+		<result property="openApiProvdInsttNm" column="OPEN_API_PROVD_INSTT_NM"/>
+		<result property="openApiSvcCn" column="OPEN_API_SVC_CN"/>
+		<result property="collectDt" column="COLLECT_DT"/>
+	</resultMap>
+		
+	<select id="selectOpenApiInquiryHistoryList" parameterType="egovframework.mbl.com.oas.service.OpenApiVO" resultMap="openApiList" >
+		<![CDATA[
+
+			SELECT a.SN, b.CODE_NM as OPEN_API_SVC_NM, c.CODE_NM as OPEN_API_PROVD_INSTT_NM, a.COLLECT_DT
+			FROM COMTNOPENAPI a, COMTCCMMNDETAILCODE b, COMTCCMMNDETAILCODE c
+			WHERE a.OPEN_API_SVC_CODE_ID = b.CODE_ID
+			AND a.OPEN_API_SVC_CODE = b.CODE
+			AND a.OPENAPI_PROVD_INSTT_CODE_ID = c.CODE_ID
+			AND a.OPENAPI_PROVD_INSTT_CODE = c.CODE
+		]]>
+			<if test="searchCondition == '0'">AND
+				<![CDATA[	c.CODE_NM LIKE CONCAT('%', #{searchKeyword}, '%')	]]>
+			</if>
+			<if test="searchCondition == '1'">AND
+				<![CDATA[	b.CODE_NM LIKE CONCAT('%', #{searchKeyword}, '%')	]]>
+			</if>
+		<![CDATA[
+			ORDER BY a.SN DESC
+
+            LIMIT  #{recordCountPerPage} OFFSET #{firstIndex}
+		]]>
+	</select>	
+	
+	<select id="selectOpenApiInquiryHistoryListCnt" parameterType="egovframework.mbl.com.oas.service.OpenApiVO" resultType="java.lang.Integer" >
+		<![CDATA[
+			SELECT COUNT(SN)
+			FROM COMTNOPENAPI a, COMTCCMMNDETAILCODE b, COMTCCMMNDETAILCODE c
+			WHERE a.OPEN_API_SVC_CODE_ID = b.CODE_ID
+			AND a.OPEN_API_SVC_CODE = b.CODE
+			AND a.OPENAPI_PROVD_INSTT_CODE_ID = c.CODE_ID
+			AND a.OPENAPI_PROVD_INSTT_CODE = c.CODE
+		]]>
+			<if test="searchCondition == '0'">AND
+				<![CDATA[	c.CODE_NM LIKE CONCAT('%', #{searchKeyword}, '%')	]]>
+			</if>
+			<if test="searchCondition == '1'">AND
+				<![CDATA[	b.CODE_NM LIKE CONCAT('%', #{searchKeyword}, '%')	]]>
+			</if>
+	</select>	
+ 
+ 	<select id="selectOpenApiInquiryHistory" parameterType="egovframework.mbl.com.oas.service.OpenApiVO" resultMap="openApiDetail" >
+		<![CDATA[
+			SELECT a.SN, a.MBER_ID, b.CODE_NM as OPEN_API_SVC_NM,
+				c.CODE_NM as OPEN_API_PROVD_INSTT_NM, a.OPEN_API_SVC_CN, a.COLLECT_DT
+			FROM COMTNOPENAPI a, COMTCCMMNDETAILCODE b, COMTCCMMNDETAILCODE c
+			WHERE a.OPEN_API_SVC_CODE_ID = b.CODE_ID
+			AND a.OPEN_API_SVC_CODE = b.CODE
+			AND a.OPENAPI_PROVD_INSTT_CODE_ID = c.CODE_ID
+			AND a.OPENAPI_PROVD_INSTT_CODE = c.CODE
+			AND a.SN = #{sn}
+		]]>				
+	</select>
+ 
+ 	<insert id="insertOpenApiInquiryHistory" parameterType="egovframework.mbl.com.oas.service.OpenApi" >
+		<![CDATA[
+			INSERT INTO COMTNOPENAPI
+				(SN, MBER_ID, OPEN_API_SVC_CODE_ID,
+				OPEN_API_SVC_CODE, OPEN_API_SVC_CN, OPENAPI_PROVD_INSTT_CODE_ID,
+				OPENAPI_PROVD_INSTT_CODE, COLLECT_DT)
+			VALUES
+				(#{sn},
+				#{mberId},
+				(SELECT CODE_ID
+					FROM COMTCCMMNDETAILCODE
+					WHERE CODE_NM = #{openApiSvcNm}),
+				(SELECT CODE
+					FROM COMTCCMMNDETAILCODE
+					WHERE CODE_NM = #{openApiSvcNm}),
+				#{openApiSvcCn},
+				(SELECT CODE_ID
+					FROM COMTCCMMNDETAILCODE
+					WHERE CODE_NM = #{openApiProvdInsttNm}),
+				(SELECT CODE
+					FROM COMTCCMMNDETAILCODE
+					WHERE CODE_NM = #{openApiProvdInsttNm}),
+				SYSDATE())
+		]]>
+	</insert>
+</mapper>

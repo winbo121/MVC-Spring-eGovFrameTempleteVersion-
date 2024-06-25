@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="NewsManageDAO">
+
+	<resultMap id="NewsManage" type="egovframework.com.uss.ion.nws.service.NewsManageVO">
+		<result property="newsId" 		column="NEWS_ID"/>
+		<result property="newsSj" 		column="NEWS_SJ"/>
+		<result property="newsCn" 		column="NEWS_CN"/>
+		<result property="newsOrigin" 	column="NEWS_ORIGIN"/>
+		<result property="ntceDe" 		column="NTCE_DE"/>
+		<result property="atchFileId" 	column="ATCH_FILE_ID"/>
+		<result property="frstRegisterPnttm" 	column="FRST_REGIST_PNTTM"/>
+		<result property="frstRegisterId" 		column="FRST_REGISTER_ID"/>
+		<result property="lastUpdusrPnttm" 		column="LAST_UPDT_PNTTM"/>
+		<result property="lastUpdusrId" 		column="LAST_UPDUSR_ID"/>		
+	</resultMap>
+	
+	<select id="selectNewsDetail" resultMap="NewsManage">
+		<![CDATA[		
+			SELECT  NEWS_ID, NEWS_SJ, NEWS_CN, NEWS_ORIGIN, NTCE_DE,  ATCH_FILE_ID ,
+					TO_CHAR(FRST_REGIST_PNTTM,'YYYY-MM-DD') FRST_REGIST_PNTTM   , FRST_REGISTER_ID, 
+					TO_CHAR(LAST_UPDT_PNTTM,'YYYY-MM-DD')   LAST_UPDT_PNTTM	  , LAST_UPDUSR_ID			 			  			 			  
+			FROM	COMTNNEWSINFO					
+			WHERE	NEWS_ID=#{newsId}					
+		]]>
+	</select>
+	
+	<select id="selectNewsList" parameterType="egovframework.com.uss.ion.nws.service.NewsManageDefaultVO" resultType="egovMap">
+		<![CDATA[
+			SELECT NEWS_ID, 
+				NEWS_SJ, 
+				NEWS_CN, 
+				NEWS_ORIGIN, 
+				NTCE_DE, 
+				ATCH_FILE_ID,  
+				FRST_REGIST_PNTTM	FRST_REGISTER_PNTTM	  , 
+				FRST_REGISTER_ID, 
+				LAST_UPDT_PNTTM	  	LAST_UPDUSR_PNTTM, 
+				LAST_UPDUSR_ID
+			FROM
+				   (
+				   SELECT  ROWNUM RNUM, NEWS.*
+				   FROM
+				   	   	  (
+				   		   SELECT  NEWS_ID, NEWS_SJ, NEWS_CN, NEWS_ORIGIN, NTCE_DE, ATCH_FILE_ID,  
+								   FRST_REGIST_PNTTM	  , FRST_REGISTER_ID, 
+								   LAST_UPDT_PNTTM	  , LAST_UPDUSR_ID
+						   FROM	   COMTNNEWSINFO
+						   WHERE   1=1
+		]]>						   
+			<if test="searchCondition == 'newsSj'">AND
+				<![CDATA[NEWS_SJ LIKE CONCAT('%' , #{searchKeyword} , '%')]]>
+			</if>
+			<if test="searchCondition == 'newsOrigin'">AND
+				<![CDATA[NEWS_ORIGIN  LIKE CONCAT('%' , #{searchKeyword} , '%')]]>
+			</if>
+		<![CDATA[			
+						   ORDER BY NEWS_ID DESC								   
+						  ) NEWS
+				   ) 
+			WHERE ROWNUM <= #{recordCountPerPage} and RNUM > #{firstIndex}	
+		]]>					
+	</select>
+	
+	<select id="selectNewsListTotCnt" parameterType="egovframework.com.uss.ion.nws.service.NewsManageDefaultVO" resultType="int">
+		<![CDATA[
+			SELECT 	COUNT(*) totcnt
+			FROM 	COMTNNEWSINFO
+			WHERE 	1=1
+		]]>			
+			<if test="searchCondition == 'newsSj'">AND
+				<![CDATA[NEWS_SJ LIKE CONCAT('%' , #{searchKeyword} , '%')]]>
+			</if>
+			<if test="searchCondition == 'newsOrigin'">AND
+				<![CDATA[NEWS_ORIGIN  LIKE CONCAT('%' , #{searchKeyword} , '%')]]>
+			</if>
+	</select>
+	
+	<insert id="insertNewsInfo">	
+		<![CDATA[	
+			INSERT INTO COMTNNEWSINFO
+				   (NEWS_ID
+				  , NEWS_SJ
+				  , NEWS_CN
+				  , NEWS_ORIGIN
+				  , NTCE_DE
+				  , ATCH_FILE_ID				  
+				  , FRST_REGIST_PNTTM 
+				  , FRST_REGISTER_ID 
+				  , LAST_UPDT_PNTTM 
+				  , LAST_UPDUSR_ID) 
+			VALUES ( #{newsId}
+				  , #{newsSj}
+				  , #{newsCn}
+				  , #{newsOrigin}
+				  , #{ntceDe}
+				  , #{atchFileId}
+				  , SYSDATETIME
+				  , #{frstRegisterId}
+				  , SYSDATETIME
+				  , #{lastUpdusrId} )
+		]]>
+	</insert>
+
+	<update id="updateNewsInfo">
+		<![CDATA[
+			UPDATE	COMTNNEWSINFO	SET
+					NEWS_ID=#{newsId} 
+				  , NEWS_SJ=#{newsSj}
+				  , NEWS_CN=#{newsCn}
+				  , NEWS_ORIGIN=#{newsOrigin}
+				  , NTCE_DE=#{ntceDe}
+				  , ATCH_FILE_ID=#{atchFileId}				  			
+				  , LAST_UPDT_PNTTM=SYSDATETIME
+				  , LAST_UPDUSR_ID=#{lastUpdusrId}
+ 			WHERE  NEWS_ID=#{newsId}
+		]]>
+	</update>
+	
+	<delete id="deleteNewsInfo">
+		<![CDATA[
+			DELETE FROM COMTNNEWSINFO 
+			WHERE  NEWS_ID=#{newsId}
+		]]>
+	</delete>
+	
+</mapper>

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="HpcmManageDAO">
+
+	<resultMap id="HpcmManage" type="egovframework.com.uss.olh.hpc.service.HpcmManageVO">
+		<result property="hpcmId" 		column="HPCM_ID"/>
+		<result property="hpcmSeCode" 	column="HPCM_SE_CODE"/>
+		<result property="hpcmSeCodeNm" 	column="HPCM_SE_CODE_NM"/>
+		<result property="hpcmDf" 		column="HPCM_DFN"/>
+		<result property="hpcmDc" 		column="HPCM_DC"/>
+		<result property="frstRegisterPnttm" 	column="FRST_REGIST_PNTTM"/>
+		<result property="frstRegisterId" 		column="FRST_REGISTER_ID"/>
+		<result property="lastUpdusrPnttm" 		column="LAST_UPDT_PNTTM"/>
+		<result property="lastUpdusrId" 		column="LAST_UPDUSR_ID"/>
+	</resultMap>
+
+	<select id="selectHpcmDetail" resultMap="HpcmManage">
+		<![CDATA[
+			SELECT 	A.HPCM_ID, A.HPCM_SE_CODE, B.CODE_NM HPCM_SE_CODE_NM, A.HPCM_DFN, HPCM_DC,
+					DATE_FORMAT(A.FRST_REGIST_PNTTM,'%Y-%m-%d') FRST_REGIST_PNTTM,
+					DATE_FORMAT(A.LAST_UPDT_PNTTM,'%Y-%m-%d')   LAST_UPDT_PNTTM,
+			FROM	COMTNHPCMINFO	A
+			LEFT OUTER JOIN COMTCCMMNDETAILCODE B
+			ON		B.CODE_ID ='COM021' AND A.HPCM_SE_CODE = B.CODE
+			WHERE	HPCM_ID=#{hpcmId}
+		]]>
+	</select>
+
+	<select id="selectHpcmList" parameterType="egovframework.com.uss.olh.hpc.service.HpcmManageDefaultVO" resultType="egovMap">
+		<![CDATA[
+			SELECT
+				A.HPCM_ID,
+				A.HPCM_SE_CODE,
+				B.CODE_NM HPCM_SE_CODE_NM,
+				A.HPCM_DFN 						HPCM_DF,
+				HPCM_DC,
+				DATE_FORMAT(A.FRST_REGIST_PNTTM,'%Y-%m-%d') FRST_REGIST_PNTTM,
+				A.FRST_REGISTER_ID,
+				DATE_FORMAT(A.LAST_UPDT_PNTTM,'%Y-%m-%d') LAST_UPDUSR_PNTTM,
+				A.LAST_UPDUSR_ID
+						   FROM	COMTNHPCMINFO	A
+						   LEFT OUTER JOIN COMTCCMMNDETAILCODE B
+						   ON		B.CODE_ID ='COM021' AND A.HPCM_SE_CODE = B.CODE
+						   WHERE	1=1
+		]]>
+			<if test="searchCondition == 'hpcmSeCodeNm'">AND
+				<![CDATA[CODE_NM LIKE CONCAT('%' , #{searchKeyword} , '%')]]>
+			</if>
+			<if test="searchCondition == 'hpcmDf'">AND
+				<![CDATA[HPCM_DFN LIKE CONCAT('%' , #{searchKeyword} , '%')]]>
+			</if>
+						   ORDER BY HPCM_ID DESC
+			LIMIT  #{recordCountPerPage} OFFSET #{firstIndex}	
+	</select>
+
+	<select id="selectHpcmListTotCnt" parameterType="egovframework.com.uss.olh.hpc.service.HpcmManageDefaultVO" resultType="int">
+		<![CDATA[
+			SELECT 	COUNT(*) totcnt
+			FROM 	COMTNHPCMINFO
+			WHERE 	1=1
+		]]>
+			<if test="searchCondition == 'hpcmSeCodeNm'">AND
+				<![CDATA[CODE_NM LIKE CONCAT('%' , #{searchKeyword} , '%')]]>
+			</if>
+			<if test="searchCondition == 'hpcmDf'">AND
+				<![CDATA[HPCM_DFN LIKE CONCAT('%' , #{searchKeyword} , '%')]]>
+			</if>
+	</select>
+
+	<insert id="insertHpcmCn">
+		<![CDATA[
+			INSERT INTO COMTNHPCMINFO
+				   (HPCM_ID
+				  , HPCM_SE_CODE
+				  , HPCM_DFN
+				  , HPCM_DC
+				  , FRST_REGIST_PNTTM
+				  , FRST_REGISTER_ID
+				  , LAST_UPDT_PNTTM
+				  , LAST_UPDUSR_ID)
+			VALUES ( #{hpcmId}
+				  , #{hpcmSeCode}
+				  , #{hpcmDf}
+				  , #{hpcmDc}
+				  , SYSDATE()
+				  , #{frstRegisterId}
+				  , SYSDATE()
+				  , #{lastUpdusrId} )
+		]]>
+	</insert>
+
+	<update id="updateHpcmCn">
+		<![CDATA[
+			UPDATE	COMTNHPCMINFO	SET
+				    HPCM_ID=#{hpcmId}
+				  , HPCM_SE_CODE=#{hpcmSeCode}
+				  , HPCM_DFN=#{hpcmDf}
+				  , HPCM_DC=#{hpcmDc}
+				  , LAST_UPDT_PNTTM=SYSDATE()
+				  , LAST_UPDUSR_ID=#{lastUpdusrId}
+ 			WHERE  HPCM_ID=#{hpcmId}
+		]]>
+	</update>
+
+	<delete id="deleteHpcmCn">
+		<![CDATA[
+			DELETE FROM COMTNHPCMINFO
+			WHERE  HPCM_ID=#{hpcmId}
+		]]>
+	</delete>
+
+</mapper>

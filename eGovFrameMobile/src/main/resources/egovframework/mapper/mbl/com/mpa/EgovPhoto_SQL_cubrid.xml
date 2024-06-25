@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="PhotoDAO">
+
+	<resultMap id="photoMap" type="egovframework.mbl.com.mpa.service.Photo">
+		<result property="sn" 		column="SN"/>
+		<result property="mberId" 		column="MBER_ID"/>
+		<result property="photoSj" 		column="PHOTO_SJ"/>
+		<result property="atchFileId" 	column="ATCH_FILE_ID"/>	
+		<result property="creatDt" 	column="CREAT_DT"/>
+		<result property="updtDt" 		column="UPDT_DT"/>
+	</resultMap>
+	
+	<select id="selectPhoto" resultMap="photoMap">
+		<![CDATA[		
+			SELECT SN, MBER_ID, PHOTO_SJ, ATCH_FILE_ID, CREAT_DT, UPDT_DT	 			  			 			  
+			FROM	COMTNPHOTOALBUM		
+			WHERE	SN=#{sn}					
+		]]>
+	</select>
+	
+	<select id="selectPhotoList" parameterType="egovframework.mbl.com.mpa.service.PhotoVO" resultType="egovMap">
+		<![CDATA[
+			SELECT  * FROM  ( SELECT ROWNUM RNUM, ALL_LIST.* FROM  (
+			SELECT SN, MBER_ID, PHOTO_SJ, ATCH_FILE_ID, CREAT_DT, UPDT_DT		 
+			FROM	COMTNPHOTOALBUM
+			WHERE	1=1
+		]]>					
+			<if test="searchCondition == 'mberId'">AND
+				MBER_ID LIKE CONCAT('%', #{searchKeyword}, '%')
+			</if>
+			<if test="searchCondition == 'photoSj'">AND
+				PHOTO_SJ  LIKE CONCAT('%', #{searchKeyword}, '%')
+			</if>
+		<![CDATA[
+			ORDER BY SN DESC			
+                   ) ALL_LIST
+                   )
+            WHERE  RNUM  > #{firstIndex} AND  RNUM <= #{firstIndex} + #{recordCountPerPage}
+        ]]>	
+	</select>
+	
+	<select id="selectPhotoListTotCnt" parameterType="egovframework.mbl.com.mpa.service.PhotoVO" resultType="int">
+		<![CDATA[
+			SELECT 	COUNT(*) totcnt
+			FROM 	COMTNPHOTOALBUM
+			WHERE	1=1
+		]]>					
+			<if test="searchCondition == 'mberId'">AND
+				MBER_ID LIKE CONCAT('%', #{searchKeyword}, '%')
+			</if>
+			<if test="searchCondition == 'photoSj'">AND
+				PHOTO_SJ  LIKE CONCAT('%', #{searchKeyword}, '%')
+			</if>
+	</select>
+	
+	<insert id="insertPhoto">
+		<![CDATA[	
+			INSERT INTO COMTNPHOTOALBUM
+					(SN, MBER_ID, PHOTO_SJ, ATCH_FILE_ID, CREAT_DT, UPDT_DT) 
+			VALUES
+					( #{sn}, #{mberId}, #{photoSj}, #{atchFileId}, SYSDATETIME, SYSDATETIME )
+		]]>
+	</insert>
+
+	<update id="updatePhoto">
+		<![CDATA[
+			UPDATE	COMTNPHOTOALBUM SET
+					SN=#{sn} 
+				  , PHOTO_SJ=#{photoSj}
+				  , ATCH_FILE_ID=#{atchFileId}	
+				  , UPDT_DT=SYSDATETIME
+ 			WHERE  SN=#{sn}
+		]]>
+		<if test="mberId != ''">
+		  	AND MBER_ID = #{mberId}
+		</if>
+	</update>
+	
+	<delete id="deletePhoto">
+		<![CDATA[
+			DELETE FROM COMTNPHOTOALBUM 
+			WHERE  SN=#{sn}
+		]]>
+		<if test="mberId != ''">
+		  	AND MBER_ID = #{mberId}
+		</if>
+	</delete>
+	
+</mapper>

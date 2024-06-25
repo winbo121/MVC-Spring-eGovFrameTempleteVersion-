@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="IndvdlPgeDAO">
+
+    <resultMap id="indvdlpgeCntntsMap" type="egovframework.com.uss.mpe.service.IndvdlPge">
+        <result property="cntntsId" column="CNTNTS_ID"/>
+        <result property="cntntsNm" column="CNTNTS_NM"/>
+        <result property="cntcUrl" column="CNTC_URL"/>
+        <result property="cntntsUseAt" column="CNTNTS_USE_AT"/>
+        <result property="cntntsLinkUrl" column="CNTNTS_LINK_URL"/>
+        <result property="cntntsDc" column="CNTNTS_DC"/>
+    </resultMap>
+
+    <resultMap id="indvdlpgeMap" type="egovframework.com.uss.mpe.service.IndvdlPgeVO">
+        <result property="userId" column="EMPLYR_ID"/>
+         <result property="titleBarColor" column="TITLEBAR_COLOR"/>
+        <result property="sortMthd" column="ALGN_MTHD"/>
+        <result property="sortCnt" column="ALGN_CO"/>
+    </resultMap>
+
+    <resultMap id="indvdlPgeDetl" type="egovframework.com.uss.mpe.service.IndvdlPgeVO">
+        <result property="rownum" column="ROWNUM"/>
+        <result property="userId" column="EMPLYR_ID"/>
+        <result property="cntntsId" column="CNTNTS_ID"/>
+        <result property="cntntsNm" column="CNTNTS_NM"/>
+        <result property="cntcUrl" column="CNTC_URL"/>
+        <result property="cntntsUseAt" column="CNTNTS_USE_AT"/>
+        <result property="cntntsLinkUrl" column="CNTNTS_LINK_URL"/>
+        <result property="cntntsDc" column="CNTNTS_DC"/>
+    </resultMap>
+
+    <!-- 마이페이지 설정정보 조회 -->
+    <select id="selectIndvdlpgeResult" parameterType="egovframework.com.uss.mpe.service.IndvdlPgeVO" resultMap="indvdlpgeMap">
+		<![CDATA[
+            SELECT EMPLYR_ID, TITLEBAR_COLOR, ALGN_MTHD, ALGN_CO 
+            FROM COMTNINDVDLPGEESTBS
+            WHERE 1 = 1 AND EMPLYR_ID=#{userId}
+        ]]>
+    </select>
+    <select id="selectIndvdlpgeResultTotCnt" parameterType="egovframework.com.uss.mpe.service.IndvdlPgeVO" resultType="int">
+            SELECT COUNT(*) AS tot_cnt
+              FROM COMTNINDVDLPGEESTBS
+             WHERE 1 = 1
+               AND EMPLYR_ID = #{userId}
+    </select>
+    <select id="selectIndvdlpgeResultDetail" parameterType="egovframework.com.uss.mpe.service.IndvdlPgeVO" resultMap="indvdlPgeDetl">
+            SELECT @RNUM:=@RNUM+1 AS ROWNUM,
+                   A.EMPLYR_ID,
+                   A.CNTNTS_ID,
+                   B.CNTNTS_NM,
+                   B.CNTC_URL,
+                   B.CNTNTS_USE_AT,
+                   B.CNTNTS_LINK_URL,
+                   B.CNTNTS_DC
+              FROM COMTNCNTNTSLIST A, 
+                   COMTNINDVDLPGECNTNTS B
+             WHERE 1 = 1
+               AND A.CNTNTS_ID     = B.CNTNTS_ID
+               AND A.EMPLYR_ID     = #{userId}
+               AND B.CNTNTS_USE_AT = 'Y'
+    </select>
+    <select id="selectIndvdlpgeResultDetailTotCnt" parameterType="egovframework.com.uss.mpe.service.IndvdlPgeVO" resultType="int">
+            SELECT COUNT(*) AS tot_cnt
+              FROM COMTNCNTNTSLIST A, 
+                   COMTNINDVDLPGECNTNTS B
+             WHERE 1 = 1
+               AND A.CNTNTS_ID     = B.CNTNTS_ID
+               AND A.EMPLYR_ID     = #{userId}
+               AND B.CNTNTS_USE_AT = 'Y'
+    </select>
+	<!-- 마이페이지 콘텐츠 등록 -->
+    <insert id="insertIndvdlpgeCntnts">
+        <![CDATA[
+            INSERT INTO COMTNINDVDLPGECNTNTS 
+                (
+                	CNTNTS_ID, CNTNTS_NM, CNTC_URL, CNTNTS_USE_AT, CNTNTS_LINK_URL, CNTNTS_DC
+                )
+            VALUES 
+            	(
+            		#{cntntsId},#{cntntsNm},#{cntcUrl},#{cntntsUseAt},#{cntntsLinkUrl},#{cntntsDc}
+            	)
+        ]]>
+    </insert>
+    <!-- 마이페이지 콘텐츠 상세보기 -->
+	<select id="selectIndvdlpgeCntnts" parameterType="egovframework.com.uss.mpe.service.IndvdlPge" resultMap="indvdlpgeCntntsMap">
+        <![CDATA[
+            SELECT CNTNTS_ID, CNTNTS_NM, CNTC_URL, CNTNTS_USE_AT, CNTNTS_LINK_URL, CNTNTS_DC 
+            FROM COMTNINDVDLPGECNTNTS
+            WHERE 1 = 1 AND CNTNTS_ID=#{cntntsId}
+        ]]>
+    </select>
+    <!-- 마이페이지 콘텐츠 수정 -->
+	<update id="updateIndvdlpgeCntnts" parameterType="egovframework.com.uss.mpe.service.IndvdlPge">
+        <![CDATA[
+            UPDATE COMTNINDVDLPGECNTNTS
+            SET    CNTNTS_NM = #{cntntsNm}, 
+	               CNTC_URL = #{cntcUrl}, 
+	               CNTNTS_USE_AT = #{cntntsUseAt}, 
+	               CNTNTS_LINK_URL = #{cntntsLinkUrl}, 
+	               CNTNTS_DC = #{cntntsDc}
+            WHERE  CNTNTS_ID=#{cntntsId}
+        ]]>
+    </update>
+    <!-- 마이페이지 콘텐츠 목록 -->
+    <select id="selectIndvdlpgeCntntsList" parameterType="egovframework.com.uss.mpe.service.IndvdlPgeCntntsVO" resultMap="indvdlpgeCntntsMap">
+		<![CDATA[
+            SELECT CNTNTS_ID, CNTNTS_NM, CNTC_URL, CNTNTS_USE_AT, CNTNTS_LINK_URL, CNTNTS_DC 
+            FROM COMTNINDVDLPGECNTNTS
+            WHERE 1=1
+        ]]>
+            <if test="searchCondition == '1'">AND
+                <![CDATA[CNTNTS_NM LIKE CONCAT('%',#{searchKeyword},'%') ]]>
+            </if>
+             <if test="searchCondition == '2'">AND
+                <![CDATA[CNTNTS_USE_AT LIKE CONCAT('%',#{searchKeyword},'%') ]]>
+            </if>
+            ORDER BY CNTNTS_ID DESC
+            LIMIT #{recordCountPerPage} OFFSET #{firstIndex}      
+    </select>
+    <!-- 마이페이지에 콘텐츠 추가를 위해 콘텐츠 목록 조회 -->
+    <select id="addIndvdlpgeCntntsList" parameterType="egovframework.com.uss.mpe.service.IndvdlPgeCntntsVO" resultMap="indvdlpgeCntntsMap">
+		<![CDATA[
+            SELECT CNTNTS_ID, CNTNTS_NM, CNTC_URL, CNTNTS_USE_AT, CNTNTS_LINK_URL, CNTNTS_DC 
+            FROM COMTNINDVDLPGECNTNTS
+            WHERE 1 = 1 AND CNTNTS_USE_AT = 'Y' 
+
+            AND CNTNTS_ID NOT IN (
+				SELECT CNTNTS_ID FROM COMTNCNTNTSLIST WHERE EMPLYR_ID=#{userId}
+			)
+        ]]>
+        	<if test="searchCondition == '1'">AND
+                <![CDATA[CNTNTS_NM LIKE CONCAT('%',#{searchKeyword},'%') ]]>
+            </if>
+            ORDER BY CNTNTS_ID DESC
+            LIMIT #{recordCountPerPage} OFFSET #{firstIndex}      
+    </select>
+    <!-- 마이페이지에 콘텐츠 추가를 위해 콘텐츠 개수조회 -->
+    <select id="selectIndvdlpgeAddListTotCnt" parameterType="egovframework.com.uss.mpe.service.IndvdlPgeCntntsVO" resultType="int">
+		<![CDATA[
+            SELECT count(*) totcnt 
+            FROM COMTNINDVDLPGECNTNTS
+            WHERE CNTNTS_USE_AT = 'Y' 
+            AND CNTNTS_ID NOT IN (
+				SELECT CNTNTS_ID FROM COMTNCNTNTSLIST WHERE EMPLYR_ID=#{userId}
+			)
+        ]]>
+        	<if test="searchCondition == '1'">AND
+                <![CDATA[CNTNTS_NM LIKE CONCAT('%',#{searchKeyword},'%') ]]>
+            </if>
+    </select>    
+    <!-- 마이페이지에  콘텐츠를 바로 추가 -->
+    <insert id="addIndvdlpgeCntnts" parameterType="egovframework.com.uss.mpe.service.IndvdlPgeCntntsVO">
+        <![CDATA[
+            INSERT INTO COMTNCNTNTSLIST 
+                (
+                	CNTNTS_ID, EMPLYR_ID
+                )
+            VALUES 
+            	(
+            		#{cntntsId},#{userId}
+            	)
+        ]]>
+    </insert>  
+    <!-- 마이페이지에서  콘텐츠를 바로 삭제 -->
+    <delete id="delIndvdlpgeCntnts" parameterType="egovframework.com.uss.mpe.service.IndvdlPgeCntntsVO">
+        <![CDATA[
+            DELETE FROM COMTNCNTNTSLIST WHERE  EMPLYR_ID=#{userId} AND CNTNTS_ID=#{cntntsId}
+        ]]>
+    </delete>      
+    <!-- 마이페이지 콘텐츠 개수 -->
+    <select id="selectIndvdlpgeListTotCnt" parameterType="egovframework.com.uss.mpe.service.IndvdlPgeCntntsVO" resultType="int">
+        <![CDATA[
+            SELECT COUNT(*) totcnt 
+            FROM COMTNINDVDLPGECNTNTS 
+            WHERE 1=1
+        ]]>
+            <if test="searchCondition == '1'">AND
+                <![CDATA[CNTNTS_NM LIKE CONCAT('%',#{searchKeyword},'%') ]]>
+            </if>
+             <if test="searchCondition == '2'">AND
+                <![CDATA[CNTNTS_USE_AT LIKE CONCAT('%',#{searchKeyword},'%') ]]>
+            </if>
+    </select>
+    <!-- 마이페이지 콘텐츠 삭제 -->
+	<update id="deleteIndvdlpgeCntnts" parameterType="egovframework.com.uss.mpe.service.IndvdlPge">
+        <![CDATA[
+            UPDATE COMTNINDVDLPGECNTNTS
+            SET CNTNTS_USE_AT = 'N' 
+            WHERE CNTNTS_ID=#{cntntsId}
+        ]]>
+    </update>
+    <!-- 마이페이지 설정정보 존재 체크 -->
+    <select id="selectIndvdlpgeConfCnt" parameterType="egovframework.com.uss.mpe.service.IndvdlPgeVO" resultType="int">
+        <![CDATA[
+            SELECT COUNT(*) confcnt 
+            FROM COMTNINDVDLPGEESTBS 
+            WHERE 1 = 1 AND EMPLYR_ID=#{userId}
+        ]]>            
+    </select>
+    <!-- 마이페이지 설정정보 수정 -->
+    <update id="updateIndvdlpgeConf" parameterType="egovframework.com.uss.mpe.service.IndvdlPgeVO">
+        <![CDATA[
+            UPDATE COMTNINDVDLPGEESTBS
+            SET	TITLEBAR_COLOR = #{titleBarColor}, 
+	            ALGN_MTHD = #{sortMthd}, 
+	            ALGN_CO = #{sortCnt}	             
+            WHERE EMPLYR_ID=#{userId}
+        ]]>
+    </update>
+    <!-- 마이페이지 설정정보 추가 -->
+    <insert id="insertIndvdlpgeConf" parameterType="egovframework.com.uss.mpe.service.IndvdlPgeVO">
+        <![CDATA[
+            INSERT INTO COMTNINDVDLPGEESTBS 
+                (
+                	EMPLYR_ID, TITLEBAR_COLOR, ALGN_MTHD, ALGN_CO
+                )
+            VALUES 
+            	(
+            		#{userId}, #{titleBarColor}, #{sortMthd}, #{sortCnt}
+            	)
+        ]]>
+    </insert>
+        <!-- 마이페이지 콘텐츠를 DB에서 완전 삭제 -->
+	<delete id="delIndvdlpgeCntntsDB" parameterType="egovframework.com.uss.mpe.service.IndvdlPge">
+        <![CDATA[
+            DELETE FROM COMTNINDVDLPGECNTNTS WHERE CNTNTS_ID=#{cntntsId}
+        ]]>
+    </delete>
+</mapper>

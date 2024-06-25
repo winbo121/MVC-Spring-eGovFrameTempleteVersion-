@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="DeviceIdentDAO">
+
+    <resultMap id="DeviceIdentMap" type="egovframework.mbl.com.mdi.service.DeviceIdent">
+        <result property="sn" column="SN"/>
+        <result property="mberId" column="MBER_ID"/>
+        <result property="uagentInfo" column="UAGENT_INFO"/>
+        <result property="browserCode" column="BROWSER_CODE"/>
+        <result property="browserNm" column="BROWSER_NM"/>
+        <result property="osCode" column="OS_CODE"/>
+        <result property="osNm" column="OS_NM"/>
+        <result property="recentCode" column="RECENT_CODE"/>
+        <result property="recentNm" column="RECENT_NM"/>
+        <result property="creatDt" column="CREAT_DT"/>
+        <result property="updtDt" column="UPDT_DT"/>
+    </resultMap>
+
+	<select id="selectDeviceIdent" resultMap="DeviceIdentMap">
+		<![CDATA[		
+			SELECT	SN, MBER_ID, UAGENT_INFO, 
+					BROWSER_CODE, 
+					(	SELECT CODE_NM 
+						FROM COMTCCMMNDETAILCODE 
+						WHERE CODE_ID = 'COM083' 
+							AND USE_AT  = 'Y' 
+							AND CODE = BROWSER_CODE ) AS BROWSER_NM, 
+					OS_CODE, 
+					(	SELECT CODE_NM 
+						FROM COMTCCMMNDETAILCODE 
+						WHERE CODE_ID = 'COM084' 
+							AND USE_AT  = 'Y' 
+							AND CODE = OS_CODE ) AS OS_NM, 
+					RECENT_CODE, 
+					(	SELECT CODE_NM 
+						FROM COMTCCMMNDETAILCODE 
+						WHERE CODE_ID = 'COM085' 
+							AND USE_AT  = 'Y' 
+							AND CODE = RECENT_CODE ) AS RECENT_NM, 
+					CREAT_DT, UPDT_DT 
+			FROM	COMTNDEVICE
+			WHERE	SN=#{sn}
+		]]>
+	</select>
+
+	<select id="selectDeviceIdentList" parameterType="egovframework.mbl.com.mdi.service.DeviceIdentVO" resultType="egovMap">
+		<![CDATA[
+			SELECT  * FROM  ( SELECT ROWNUM RNUM, ALL_LIST.* FROM  (
+			SELECT A.SN, A.MBER_ID, A.UAGENT_INFO, A.BROWSER_CODE, B.CODE_NM AS BROWSER_NM, A.OS_CODE, C.CODE_NM AS OS_NM, A.RECENT_CODE, D.CODE_NM AS RECENT_NM, A.CREAT_DT, A.UPDT_DT
+			FROM COMTNDEVICE A, COMTCCMMNDETAILCODE B, COMTCCMMNDETAILCODE C, COMTCCMMNDETAILCODE D
+			WHERE 'COM083' = B.CODE_ID
+			AND A.BROWSER_CODE = B.CODE AND B.USE_AT  = 'Y'
+			AND 'COM084' = C.CODE_ID
+			AND A.OS_CODE = C.CODE AND C.USE_AT  = 'Y'
+			AND 'COM085' = D.CODE_ID
+			AND A.RECENT_CODE = D.CODE AND D.USE_AT  = 'Y'
+		]]>
+		<if test="searchCondition == 'mberId'">AND
+			MBER_ID LIKE CONCAT('%', #{searchKeyword}, '%')
+		</if>
+		<if test="searchCondition == 'browserNm'">AND
+			B.CODE_NM LIKE CONCAT('%', #{searchKeyword}, '%')
+		</if>
+		<if test="searchCondition == 'osNm'">AND
+			C.CODE_NM  LIKE CONCAT('%', #{searchKeyword}, '%')
+		</if>
+		<if test="searchCondition == 'recentNm'">AND
+			D.CODE_NM  LIKE CONCAT('%', #{searchKeyword}, '%')
+		</if>
+		<![CDATA[
+			ORDER BY SN DESC			
+                   ) ALL_LIST
+                   )
+            WHERE  RNUM  > #{firstIndex} AND  RNUM <= #{firstIndex} + #{recordCountPerPage}
+		]]>
+	</select>
+
+	<select id="selectDeviceIdentListTotCnt" parameterType="egovframework.mbl.com.mdi.service.DeviceIdentVO" resultType="int">
+		<![CDATA[
+			SELECT COUNT(SN)
+			FROM COMTNDEVICE A, COMTCCMMNDETAILCODE B, COMTCCMMNDETAILCODE C, COMTCCMMNDETAILCODE D
+			WHERE 'COM083' = B.CODE_ID
+			AND A.BROWSER_CODE = B.CODE AND B.USE_AT  = 'Y'
+			AND 'COM084' = C.CODE_ID
+			AND A.OS_CODE = C.CODE AND C.USE_AT  = 'Y'
+			AND 'COM085' = D.CODE_ID
+			AND A.RECENT_CODE = D.CODE AND D.USE_AT  = 'Y'
+		]]>
+		<if test="searchCondition == 'mberId'">AND
+			MBER_ID LIKE CONCAT('%', #{searchKeyword}, '%')
+		</if>
+		<if test="searchCondition == 'browserNm'">AND
+			B.CODE_NM LIKE CONCAT('%', #{searchKeyword}, '%')
+		</if>
+		<if test="searchCondition == 'osNm'">AND
+			C.CODE_NM  LIKE CONCAT('%', #{searchKeyword}, '%')
+		</if>
+		<if test="searchCondition == 'recentNm'">AND
+			D.CODE_NM  LIKE CONCAT('%', #{searchKeyword}, '%')
+		</if>
+	</select>
+	
+	<insert id="insertDeviceIdent">
+		<![CDATA[	
+			INSERT INTO COMTNDEVICE
+				(SN, MBER_ID, UAGENT_INFO, BROWSER_CODE, OS_CODE, RECENT_CODE, CREAT_DT, UPDT_DT) 
+			VALUES
+				( #{sn}, #{mberId}, #{uagentInfo}, #{browserCode}, #{osCode}, #{recentCode}, SYSDATE, SYSDATE )
+		]]>
+	</insert>
+
+	<update id="updateDeviceIdent">
+		<![CDATA[
+			UPDATE	COMTNDEVICE SET
+					SN=#{sn} 
+				  , UAGENT_INFO=#{uagentInfo}
+				  , BROWSER_CODE=#{browserCode}
+				  , OS_CODE=#{osCode}
+				  , RECENT_CODE=#{recentCode}
+				  , UPDT_DT=SYSDATE
+ 			WHERE  SN=#{sn}
+		]]>
+	</update>
+	
+	<delete id="deleteDeviceIdent">
+		<![CDATA[
+			DELETE FROM COMTNDEVICE 
+			WHERE  SN=#{sn}
+		]]>
+	</delete>
+
+</mapper>

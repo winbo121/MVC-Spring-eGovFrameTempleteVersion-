@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="GeoLocationDAO">
+
+	<resultMap id="geoLocationList" type="egovframework.mbl.com.geo.service.GeoLocationVO">
+		<result property="sn" column="SN"/>
+		<result property="buldNm" column="BULD_NM"/>
+		<result property="la" column="LA"/>
+		<result property="lo" column="LO"/>
+		<result property="telno" column="TELNO"/>
+		<result property="adres" column="ADRES"/>
+	</resultMap>
+
+	<resultMap id="geoLocationDetail" type="egovframework.mbl.com.geo.service.GeoLocationVO">
+		<result property="sn" column="SN"/>
+		<result property="mberId" column="MBER_ID"/>
+		<result property="buldNm" column="BULD_NM"/>
+		<result property="la" column="LA"/>
+		<result property="lo" column="LO"/>
+		<result property="telno" column="TELNO"/>
+		<result property="adres" column="ADRES"/>
+	</resultMap>
+
+	<select id="selectBuildingLocationInfoList" parameterType="egovframework.mbl.com.geo.service.GeoLocationVO" resultMap="geoLocationList" >
+		<![CDATA[
+
+			SELECT SN, BULD_NM, LA, LO, TELNO, ADRES
+			FROM COMTNGEOLOCATION
+			WHERE 1 = 1
+		]]>
+			<if test="searchCondition == '0'">AND
+				<![CDATA[	BULD_NM LIKE CONCAT('%', #{searchKeyword}, '%')     ]]>
+			</if>
+			<if test="searchCondition == '1'">AND
+				<![CDATA[	TELNO LIKE CONCAT('%', #{searchKeyword}, '%') 		]]>
+			</if>
+			<if test="searchCondition == '2'">AND
+				<![CDATA[	ADRES LIKE CONCAT('%', #{searchKeyword}, '%') 		]]>
+			</if>
+		<![CDATA[
+			ORDER BY sn DESC
+        ]]>
+        <if test="searchUseYn == ''">
+        <![CDATA[
+		LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+        ]]>
+		</if>
+	</select>	
+	
+	<select id="selectBuildingLocationInfoListCnt" parameterType="egovframework.mbl.com.geo.service.GeoLocationVO" resultType="java.lang.Integer" >
+		<![CDATA[
+			SELECT COUNT(SN)
+			FROM COMTNGEOLOCATION
+			WHERE 1 = 1
+		]]>
+			<if test="searchCondition == '0'">AND
+				<![CDATA[	BULD_NM LIKE CONCAT('%', #{searchKeyword}, '%')     ]]>
+			</if>
+			<if test="searchCondition == '1'">AND
+				<![CDATA[	TELNO LIKE CONCAT('%', #{searchKeyword}, '%') 		]]>
+			</if>
+			<if test="searchCondition == '2'">AND
+				<![CDATA[	ADRES LIKE CONCAT('%', #{searchKeyword}, '%') 		]]>
+			</if>
+	</select>	
+ 
+ 	<select id="selectBuildingLocationInfo" parameterType="egovframework.mbl.com.geo.service.GeoLocationVO" resultMap="geoLocationDetail" >
+		<![CDATA[
+			SELECT SN, MBER_ID, BULD_NM, LA, LO, TELNO, ADRES
+			FROM COMTNGEOLOCATION
+			WHERE SN = #{sn}
+		]]>	
+	</select>
+ 
+ 	<insert id="insertBuildingLocationInfo" parameterType="egovframework.mbl.com.geo.service.GeoLocation" >
+		<![CDATA[
+			INSERT INTO COMTNGEOLOCATION
+				(SN, MBER_ID, BULD_NM, LA, LO, TELNO, ADRES)
+			VALUES
+				(#{sn}, #{mberId}, #{buldNm}, #{la}, #{lo}, #{telno}, #{adres})			
+		]]>
+	</insert>
+	
+	<update id="updateBuildingLocationInfo">
+		<![CDATA[
+			UPDATE COMTNGEOLOCATION
+			SET BULD_NM = #{buldNm},
+				LA = #{la},	
+				LO = #{lo},
+				TELNO = #{telno},
+				ADRES = #{adres}
+ 			WHERE SN = #{sn}
+		]]>
+		<if test="mberId != ''">
+				AND MBER_ID = #{mberId}
+		</if>
+	</update>
+	
+	<delete id="deleteBuildingLocationInfo">
+		<![CDATA[
+			DELETE FROM COMTNGEOLOCATION 
+			WHERE SN = #{sn}
+		]]>
+		<if test="mberId != ''">
+			  	AND MBER_ID = #{mberId}
+		</if>
+	</delete>
+</mapper>

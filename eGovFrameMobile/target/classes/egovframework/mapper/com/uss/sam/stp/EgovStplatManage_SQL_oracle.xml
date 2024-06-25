@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="StplatManageDAO">
+
+	<resultMap id="StplatManageVO" type="egovframework.com.uss.sam.stp.service.StplatManageVO">
+		<result property="useStplatId" 			column="USE_STPLAT_ID"/>
+		<result property="useStplatNm" 			column="USE_STPLAT_NM"/>		
+		<result property="useStplatCn" 			column="USE_STPLAT_CN" jdbcType="CLOB" typeHandler="egovframework.com.cmm.AltibaseClobStringTypeHandler" />
+		<result property="infoProvdAgreCn" 		column="INFO_PROVD_AGRE_CN" jdbcType="CLOB" typeHandler="egovframework.com.cmm.AltibaseClobStringTypeHandler" />
+		<result property="frstRegisterPnttm" 	column="FRST_REGIST_PNTTM"/>
+		<result property="frstRegisterId" 		column="FRST_REGISTER_ID"/>
+		<result property="lastUpdusrPnttm" 		column="LAST_UPDT_PNTTM"/>
+		<result property="lastUpdusrId" 		column="LAST_UPDUSR_ID"/>	
+	</resultMap>
+	
+	<select id="selectStplatDetail" resultMap="StplatManageVO">
+		<![CDATA[		
+			SELECT 	USE_STPLAT_ID, USE_STPLAT_NM, USE_STPLAT_CN,  INFO_PROVD_AGRE_CN,  
+					TO_CHAR(FRST_REGIST_PNTTM,'YYYY-MM-DD') FRST_REGIST_PNTTM   , FRST_REGISTER_ID, 
+					TO_CHAR(LAST_UPDT_PNTTM,'YYYY-MM-DD')   LAST_UPDT_PNTTM	  , LAST_UPDUSR_ID			 			  			 			  
+			FROM	COMTNSTPLATINFO		
+			WHERE	USE_STPLAT_ID=#{useStplatId}					
+		]]>
+	</select>
+	
+	<select id="selectStplatList" parameterType="egovframework.com.uss.sam.stp.service.StplatManageDefaultVO" resultMap="StplatManageVO">
+		<![CDATA[
+			SELECT USE_STPLAT_ID, 
+				USE_STPLAT_NM, 
+				USE_STPLAT_CN,  
+				INFO_PROVD_AGRE_CN,  
+				 TO_CHAR(FRST_REGIST_PNTTM,'YYYY-MM-DD') FRST_REGIST_PNTTM, 
+				 FRST_REGISTER_ID, 
+				  TO_CHAR(LAST_UPDT_PNTTM,'YYYY-MM-DD') LAST_UPDT_PNTTM, 
+				  LAST_UPDUSR_ID		
+			FROM
+				   (
+				   SELECT  ROWNUM RNUM,STP.*
+				   FROM
+				   	   	  (
+				   		   SELECT 	USE_STPLAT_ID, USE_STPLAT_NM, 
+						   		    USE_STPLAT_CN,  
+						   		    INFO_PROVD_AGRE_CN,  
+						   			FRST_REGIST_PNTTM	  , FRST_REGISTER_ID, 
+									LAST_UPDT_PNTTM	  , LAST_UPDUSR_ID			 
+						   FROM		COMTNSTPLATINFO                               			
+						   WHERE	1=1   			
+		]]>					
+			<if test="searchCondition == 'useStplatNm'">AND
+				<![CDATA[USE_STPLAT_NM LIKE CONCAT('%', #{searchKeyword}, '%')]]>
+			</if>
+			<if test="searchCondition == 'useStplatCn'">AND
+				<![CDATA[USE_STPLAT_CN LIKE CONCAT('%', #{searchKeyword}, '%')]]>
+			</if>		
+		<![CDATA[		
+							ORDER BY USE_STPLAT_NM DESC								   
+						  ) STP
+				   ) 
+			WHERE ROWNUM <= #{recordCountPerPage} and RNUM > #{firstIndex}	
+		]]>				
+	</select>
+	
+	<select id="selectStplatListTotCnt" parameterType="egovframework.com.uss.sam.stp.service.StplatManageDefaultVO" resultType="int">
+		<![CDATA[
+			SELECT 	COUNT(*) totcnt
+			FROM 	COMTNSTPLATINFO
+			WHERE 	1=1
+		]]>			
+			<if test="searchCondition == 'useStplatNm'">AND
+				<![CDATA[USE_STPLAT_NM LIKE CONCAT('%', #{searchKeyword}, '%')]]>
+			</if>
+			<if test="searchCondition == 'useStplatCn'">AND
+				<![CDATA[USE_STPLAT_CN LIKE CONCAT('%', #{searchKeyword}, '%')]]>
+			</if>
+	</select>
+	
+	
+	
+	
+	<insert id="insertStplatCn">	
+		<![CDATA[	
+			INSERT INTO COMTNSTPLATINFO
+				   (USE_STPLAT_ID
+				  , USE_STPLAT_NM				   
+				  , USE_STPLAT_CN
+				  , INFO_PROVD_AGRE_CN
+				  , FRST_REGIST_PNTTM 
+				  , FRST_REGISTER_ID 
+				  , LAST_UPDT_PNTTM 
+				  , LAST_UPDUSR_ID) 
+			VALUES ( #{useStplatId}
+				  , #{useStplatNm}			
+				  , #{useStplatCn:CLOB}
+				  , #{infoProvdAgreCn:CLOB}
+				  , SYSDATE
+				  , #{frstRegisterId}
+				  , SYSDATE
+				  , #{lastUpdusrId} )
+		]]>
+	</insert>
+	
+	<update id="updateStplatCn" >
+		<![CDATA[
+			UPDATE	COMTNSTPLATINFO	SET 
+				   	USE_STPLAT_NM=#{useStplatNm}
+				  ,	USE_STPLAT_CN=#{useStplatCn:CLOB}				  
+				  ,	INFO_PROVD_AGRE_CN=#{infoProvdAgreCn:CLOB}
+				  , LAST_UPDT_PNTTM=SYSDATE
+				  , LAST_UPDUSR_ID=#{lastUpdusrId}
+ 			WHERE  USE_STPLAT_ID=#{useStplatId}
+		]]>
+	</update>
+	
+	<delete id="deleteStplatCn">
+		<![CDATA[
+			DELETE FROM COMTNSTPLATINFO 
+			WHERE  USE_STPLAT_ID=#{useStplatId}
+		]]>
+	</delete>
+	
+</mapper>

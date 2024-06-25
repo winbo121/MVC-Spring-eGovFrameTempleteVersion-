@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MultimediaDAO">
+
+    <resultMap id="multimediaMap" type="egovframework.mbl.com.mlt.service.Multimedia">
+        <result property="sn" column="SN"/>
+        <result property="mberId" column="MBER_ID"/>
+        <result property="mltmdCode" column="MLTMD_CODE"/>
+        <result property="mltmdNm" column="MLTMD_NM"/>
+        <result property="mltmdSj" column="MLTMD_SJ"/>
+        <result property="atchFileId" 	column="ATCH_FILE_ID"/>
+        <result property="browserNm" column="BROWSER_NM"/>        
+        <result property="creatDt" column="CREAT_DT"/>
+        <result property="updtDt" column="UPDT_DT"/>
+    </resultMap>
+
+	<select id="selectMultimedia" resultMap="multimediaMap">
+		<![CDATA[		
+			SELECT	SN, MBER_ID,  
+					MLTMD_CODE, 
+					(	SELECT CODE_NM 
+						FROM COMTCCMMNDETAILCODE 
+						WHERE CODE_ID = 'COM077' 
+							AND USE_AT  = 'Y' 
+							AND CODE = MLTMD_CODE ) AS MLTMD_NM, 
+					MLTMD_SJ, ATCH_FILE_ID, BROWSER_NM, CREAT_DT, UPDT_DT 
+			FROM	COMTNMLTMD
+			WHERE	SN=#{sn}
+		]]>
+	</select>
+
+	<select id="selectMultimediaList" parameterType="egovframework.mbl.com.mlt.service.MultimediaVO" resultType="egovMap">
+		<![CDATA[
+
+			SELECT A.SN, A.MBER_ID, A.MLTMD_CODE, B.CODE_NM AS MLTMD_NM, A.MLTMD_SJ, A.ATCH_FILE_ID, A.BROWSER_NM, A.CREAT_DT, A.UPDT_DT
+			FROM COMTNMLTMD A, COMTCCMMNDETAILCODE B
+			WHERE 'COM077' = B.CODE_ID
+			AND A.MLTMD_CODE = B.CODE AND B.USE_AT  = 'Y'
+		]]>
+		<if test="searchCondition == 'mberId'">AND
+			A.MBER_ID LIKE CONCAT('%', #{searchKeyword}, '%')
+		</if>
+		<if test="searchCondition == 'mltmdNm'">AND
+			B.CODE_NM LIKE CONCAT('%', #{searchKeyword}, '%')
+		</if>
+		<if test="searchCondition == 'mltmdSj'">AND
+			A.MLTMD_SJ LIKE CONCAT('%', #{searchKeyword}, '%')
+		</if>
+		<if test="searchCondition == 'browserNm'">AND
+			A.BROWSER_NM LIKE CONCAT('%', #{searchKeyword}, '%')
+		</if>
+		<![CDATA[
+			ORDER BY SN DESC			
+			LIMIT  #{recordCountPerPage} OFFSET #{firstIndex]
+		]]>
+	</select>
+	
+	<select id="selectMultimediaListTotCnt" parameterType="egovframework.mbl.com.mlt.service.MultimediaVO" resultType="int">
+		<![CDATA[
+			SELECT COUNT(SN)
+			FROM COMTNMLTMD A, COMTCCMMNDETAILCODE B
+			WHERE 'COM077' = B.CODE_ID
+			AND A.MLTMD_CODE = B.CODE AND B.USE_AT  = 'Y'
+		]]>
+		<if test="searchCondition == 'mberId'">AND
+			A.MBER_ID LIKE CONCAT('%', #{searchKeyword}, '%')
+		</if>
+		<if test="searchCondition == 'mltmdNm'">AND
+			B.CODE_NM LIKE CONCAT('%', #{searchKeyword}, '%')
+		</if>
+		<if test="searchCondition == 'mltmdSj'">AND
+			A.MLTMD_SJ LIKE CONCAT('%', #{searchKeyword}, '%')
+		</if>
+		<if test="searchCondition == 'browserNm'">AND
+			A.BROWSER_NM LIKE CONCAT('%', #{searchKeyword}, '%')
+		</if>
+	</select>
+	
+	<insert id="insertMultimedia">
+		<![CDATA[	
+			INSERT INTO COMTNMLTMD
+				(SN, MBER_ID, MLTMD_CODE, MLTMD_SJ, ATCH_FILE_ID, BROWSER_NM, CREAT_DT, UPDT_DT) 
+			VALUES
+				( #{sn}, #{mberId}, #{mltmdCode}, #{mltmdSj}, #{atchFileId}, #{browserNm}, SYSDATE(), SYSDATE() )
+		]]>
+	</insert>
+
+	<update id="updateMultimedia">
+		<![CDATA[
+			UPDATE	COMTNMLTMD SET
+					SN=#{sn} 
+				  , MLTMD_CODE=#{mltmdCode}
+				  , MLTMD_SJ=#{mltmdSj}
+				  , ATCH_FILE_ID=#{atchFileId}
+				  , BROWSER_NM=#{browserNm}
+				  , UPDT_DT=SYSDATE()
+ 			WHERE  SN=#{sn}
+		]]>
+	<if test="mberId != ''">
+		  AND MBER_ID = #{mberId}
+	</if>
+	</update>
+	
+	<delete id="deleteMultimedia">
+		<![CDATA[
+			DELETE FROM COMTNMLTMD 
+			WHERE  SN=#{sn}
+		]]>
+	<if test="mberId != ''">
+		  AND MBER_ID = #{mberId}
+	</if>
+	</delete>
+
+</mapper>
